@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>티켓팅 클릭 타이밍 연습</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --bg: #f7f8fb;
+    --card: #ffffff;
+    --line: #e6e9ef;
+    --text: #171717;
+    --muted: #667085;
+    --blue: #1769e0;
+    --blue-dark: #0f55bd;
+    --green: #15803d;
+    --red: #c02626;
+    --soft-blue: #eef5ff;
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Segoe UI', 'Malgun Gothic', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+  }
+  .wrap { width: min(1180px, 100%); }
+  .title { text-align: center; margin-bottom: 24px; }
+  .title h1 { margin: 0 0 8px; font-size: 32px; letter-spacing: -1px; }
+  .title p { margin: 0; font-size: 15px; color: var(--muted); }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: 0 14px 40px rgba(16, 24, 40, 0.08);
+    min-height: 570px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .badge {
+    background: var(--soft-blue);
+    color: #0f4da6;
+    border: 1px solid #d8e8ff;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-weight: 900;
+    margin-bottom: 12px;
+  }
+  .desc {
+    text-align: center;
+    line-height: 1.55;
+    margin: 0 0 28px;
+    font-size: 15px;
+    color: #3f4653;
+  }
+  .clock-row {
+    width: 430px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0 24px;
+  }
+  .clock-row .clock { margin: 0; width: 100%; }
+  .hide-time-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 14px;
+    border: 1px solid #e1e6ee;
+    border-radius: 999px;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    color: #3f4653;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  .hide-time-wrap input { width: 16px; height: 16px; margin: 0; }
+    .clock {
+    width: 430px;
+    max-width: 100%;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(42px, 5.4vw, 64px);
+    font-weight: 900;
+    font-family: Consolas, 'Courier New', monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+    white-space: nowrap;
+    margin: 8px 0 24px;
+    background: #fbfcff;
+    border: 1px solid #eef1f6;
+    border-radius: 18px;
+  }
+  button.main {
+    width: min(360px, 100%);
+    height: 96px;
+    border: 0;
+    border-radius: 16px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 10px 22px rgba(23, 105, 224, 0.22);
+    transition: transform 0.08s ease, background 0.12s ease, box-shadow 0.12s ease;
+  }
+  button.main:hover:not(:disabled) { background: var(--blue-dark); }
+  button.main:active:not(:disabled) { transform: translateY(1px); }
+  button.main:disabled {
+    background: #e9edf3;
+    color: #9aa3af;
+    cursor: default;
+    box-shadow: none;
+  }
+  .result {
+    margin-top: 24px;
+    font-size: 23px;
+    font-weight: 900;
+    min-height: 34px;
+    text-align: center;
+  }
+  .sub {
+    margin-top: 8px;
+    font-size: 16px;
+    min-height: 24px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .stats {
+    margin-top: auto;
+    width: min(360px, 100%);
+    background: #f6f8fb;
+    border: 1px solid #edf0f5;
+    border-radius: 18px;
+    padding: 18px;
+    text-align: center;
+    line-height: 1.8;
+  }
+  .reset {
+    margin-top: 10px;
+    width: 150px;
+    height: 40px;
+    border: 1px solid #d7dce5;
+    border-radius: 8px;
+    background: #ffffff;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .ready { color: var(--green); }
+  .early { color: var(--blue); }
+  .late { color: var(--red); }
+  @media (max-width: 850px) {
+    body { align-items: flex-start; padding: 18px; }
+    .grid { grid-template-columns: 1fr; }
+    .clock-row { width: 100%; flex-direction: column; }
+    .clock { width: 100%; font-size: clamp(36px, 10vw, 58px); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">
+    <h1>티켓팅 클릭 타이밍 연습</h1>
+    <p>왼쪽과 오른쪽은 서로 독립적으로 동작합니다. 시간은 55초부터 시작해 00초 기준으로 측정됩니다.</p>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <div class="badge">왼쪽 · 정각 활성화 연습</div>
+      <p class="desc">55초부터 시작합니다.<br>00초가 되는 순간 버튼이 활성화되고, 그 후 클릭한 오차를 표시합니다.</p>
+      <div class="clock-row">
+        <div id="leftClock" class="clock">00:59:55.000</div>
+        <label class="hide-time-wrap" title="체크하면 왼쪽 시간에서 밀리초만 숨깁니다">
+          <input type="checkbox" id="hideLeftMs">
+          밀리초 숨김
+        </label>
+      </div>
+      <button id="leftBtn" class="main" disabled>대기 중...</button>
+      <div id="leftResult" class="result">00초에 버튼 활성화</div>
+      <div id="leftSub" class="sub">5초 후 활성화</div>
+      <div class="stats">
+        <div>연습 횟수: <b id="leftCount">0</b>회</div>
+        <div>직전 기록: <b id="leftLast">-</b></div>
+        <div>최고 기록: <b id="leftBest">-</b></div>
+        <div>평균 기록: <b id="leftAvg">-</b></div>
+        <button class="reset" onclick="resetStats('left')">기록 초기화</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="badge">오른쪽 · 빠름/늦음 감각 연습</div>
+      <p class="desc">버튼은 항상 활성화되어 있습니다.<br>00초보다 빨리 누르면 빠름, 늦게 누르면 늦음으로 표시합니다.</p>
+      <div class="clock-row">
+        <div id="rightClock" class="clock">00:59:55.000</div>
+        <label class="hide-time-wrap" title="체크하면 오른쪽 시간에서 밀리초만 숨깁니다">
+          <input type="checkbox" id="hideRightMs">
+          밀리초 숨김
+        </label>
+      </div>
+      <button id="rightBtn" class="main">Click!</button>
+      <div id="rightResult" class="result">원하는 타이밍에 클릭</div>
+      <div id="rightSub" class="sub">00초 기준으로 빠름/늦음 표시</div>
+      <div class="stats">
+        <div>연습 횟수: <b id="rightCount">0</b>회</div>
+        <div>직전 기록: <b id="rightLast">-</b></div>
+        <div>최고 기록: <b id="rightBest">-</b></div>
+        <div>평균 절대오차: <b id="rightAvg">-</b></div>
+        <button class="reset" onclick="resetStats('right')">기록 초기화</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const CYCLE = 6000;     // 55,56,57,58,59,00 = 총 6초
+const TARGET = 5000;    // 00초가 되는 지점
+const start = performance.now();
+
+const stats = {
+  left: { count: 0, totalAbs: 0, bestAbs: null, lastDiff: null },
+  right: { count: 0, totalAbs: 0, bestAbs: null, lastDiff: null }
+};
+
+let leftCycleIndex = -1;
+let leftClickedThisCycle = false;
+
+function pad(n, len = 2) { return String(n).padStart(len, '0'); }
+function secText(ms) { return (Math.abs(ms) / 1000).toFixed(3) + '초'; }
+function signedRecordText(diff) {
+  if (diff < 0) return secText(diff) + ' 빠름';
+  if (diff > 0) return secText(diff) + ' 늦음';
+  return '정확';
+}
+
+function cycleInfo(now) {
+  const total = now - start;
+  const cycleIndex = Math.floor(total / CYCLE);
+  const elapsed = total % CYCLE;
+  return { cycleIndex, elapsed, targetTime: start + cycleIndex * CYCLE + TARGET };
+}
+
+function displayTime(elapsed, hideMs = false) {
+  let shownSecond;
+  if (elapsed < 1000) shownSecond = 55;
+  else if (elapsed < 2000) shownSecond = 56;
+  else if (elapsed < 3000) shownSecond = 57;
+  else if (elapsed < 4000) shownSecond = 58;
+  else if (elapsed < 5000) shownSecond = 59;
+  else shownSecond = 0;
+
+  const msInSecond = Math.floor(elapsed % 1000);
+  const minute = shownSecond === 0 ? 0 : 59;
+  if (hideMs) return `00:${pad(minute)}:${pad(shownSecond)}`;
+  return `00:${pad(minute)}:${pad(shownSecond)}.${pad(msInSecond, 3)}`;
+}
+
+function addRecord(side, diff) {
+  const abs = Math.abs(diff);
+  const s = stats[side];
+  s.count++;
+  s.totalAbs += abs;
+  s.lastDiff = diff;
+  if (s.bestAbs === null || abs < s.bestAbs) s.bestAbs = abs;
+
+  document.getElementById(side + 'Count').textContent = s.count;
+  document.getElementById(side + 'Last').textContent = signedRecordText(s.lastDiff);
+  document.getElementById(side + 'Best').textContent = secText(s.bestAbs);
+  document.getElementById(side + 'Avg').textContent = secText(s.totalAbs / s.count);
+}
+
+function resetStats(side) {
+  stats[side] = { count: 0, totalAbs: 0, bestAbs: null, lastDiff: null };
+  document.getElementById(side + 'Count').textContent = '0';
+  document.getElementById(side + 'Last').textContent = '-';
+  document.getElementById(side + 'Best').textContent = '-';
+  document.getElementById(side + 'Avg').textContent = '-';
+}
+
+function update() {
+  const now = performance.now();
+  const left = cycleInfo(now);
+  const right = cycleInfo(now + 0); // 서로 독립 변수로 계산 가능하도록 분리
+
+  document.getElementById('leftClock').textContent = displayTime(left.elapsed, hideLeftMs.checked);
+  document.getElementById('rightClock').textContent = displayTime(right.elapsed, hideRightMs.checked);
+
+  if (left.cycleIndex !== leftCycleIndex) {
+    leftCycleIndex = left.cycleIndex;
+    leftClickedThisCycle = false;
+    document.getElementById('leftResult').textContent = '00초에 버튼 활성화';
+    document.getElementById('leftResult').className = 'result';
+  }
+
+  const leftBtn = document.getElementById('leftBtn');
+  const leftSub = document.getElementById('leftSub');
+
+  if (left.elapsed >= TARGET && !leftClickedThisCycle) {
+    leftBtn.disabled = false;
+    leftBtn.textContent = 'Click!';
+    const late = left.elapsed - TARGET;
+    leftSub.textContent = `활성화됨 · ${secText(late)} 경과`;
+    leftSub.className = 'sub ready';
+  } else {
+    leftBtn.disabled = true;
+    leftBtn.textContent = leftClickedThisCycle ? '완료' : '대기 중...';
+    if (!leftClickedThisCycle) {
+      leftSub.textContent = `${Math.ceil((TARGET - left.elapsed) / 1000)}초 후 활성화`;
+      leftSub.className = 'sub';
+    }
+  }
+
+  requestAnimationFrame(update);
+}
+
+const leftBtn = document.getElementById('leftBtn');
+leftBtn.addEventListener('click', () => {
+  if (leftBtn.disabled) return;
+  const now = performance.now();
+  const info = cycleInfo(now);
+  const diff = now - info.targetTime;
+
+  leftClickedThisCycle = true;
+  leftBtn.disabled = true;
+  leftBtn.textContent = '완료';
+
+  document.getElementById('leftResult').textContent = `${secText(diff)} 늦었습니다`;
+  document.getElementById('leftResult').className = 'result late';
+  document.getElementById('leftSub').textContent = '다음 55초부터 다시 시작';
+  document.getElementById('leftSub').className = 'sub';
+  addRecord('left', diff);
+});
+
+const rightBtn = document.getElementById('rightBtn');
+rightBtn.addEventListener('click', () => {
+  const now = performance.now();
+  const info = cycleInfo(now);
+  const diff = now - info.targetTime;
+  const result = document.getElementById('rightResult');
+
+  if (diff < 0) {
+    result.textContent = `${secText(diff)} 빨랐습니다`;
+    result.className = 'result early';
+  } else if (diff > 0) {
+    result.textContent = `${secText(diff)} 늦었습니다`;
+    result.className = 'result late';
+  } else {
+    result.textContent = '정확합니다!';
+    result.className = 'result ready';
+  }
+
+  document.getElementById('rightSub').textContent = '버튼은 계속 활성화 상태입니다';
+  addRecord('right', diff);
+});
+
+const hideLeftMs = document.getElementById('hideLeftMs');
+const hideRightMs = document.getElementById('hideRightMs');
+
+hideLeftMs.addEventListener('change', () => {
+  const now = performance.now();
+  const left = cycleInfo(now);
+  document.getElementById('leftClock').textContent = displayTime(left.elapsed, hideLeftMs.checked);
+});
+
+hideRightMs.addEventListener('change', () => {
+  const now = performance.now();
+  const right = cycleInfo(now);
+  document.getElementById('rightClock').textContent = displayTime(right.elapsed, hideRightMs.checked);
+});
+
+requestAnimationFrame(update);
+</script>
+</body>
+</html>
